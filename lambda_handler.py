@@ -1,77 +1,41 @@
-# -*- coding: utf-8 -*-
-
-# This is a simple Hello World Alexa Skill, built using
-# the implementation of handler classes approach in skill builder.
-import logging
-
 import boto3
 
 from urllib.request import Request
-
-from ask_sdk_core.skill_builder import SkillBuilder
 from ask_sdk_core.dispatch_components import AbstractRequestHandler
 from ask_sdk_core.dispatch_components import AbstractExceptionHandler
-from ask_sdk_core.utils import is_request_type, is_intent_name, get_account_linking_access_token, get_request_type, get_intent_name, get_slot_value_v2, get_simple_slot_values 
+from ask_sdk_core.utils import is_request_type, is_intent_name, get_account_linking_access_token, get_request_type, get_intent_name, get_slot_value_v2, get_simple_slot_values
 from ask_sdk_core.handler_input import HandlerInput
-
 from ask_sdk_model.ui import SimpleCard, output_speech
 from ask_sdk_model import Response
+from ask_sdk_core.skill_builder import SkillBuilder
 
-
-cognito_client = boto3.client('cognito-idp')
-sb = SkillBuilder()
+import ask_sdk_core.utils as ask_utils
+import logging
+import json
+import time
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
+sb = SkillBuilder()
 
+client = boto3.client('dynamodb')
 
-class CheckAccountLinkedHandler(AbstractRequestHandler):
-    def can_handle(self, handler_input):
-        return not get_account_linking_access_token(handler_input)
-        
-        
-    def handle(self, handler_input):
-        return handler_input.response_builder.speak("Need to link account in Alexa App").response
-
-class SayHelloHandler(AbstractRequestHandler):
-    def can_handle(self, handler_input):
-        return get_request_type(handler_input) == "IntentRequest" and get_intent_name(handler_input) == 'SayHelloIntent'
-    def handle(self, handler_input):
-        reprompt_message = "what is your request?"
-        speak_message = "hello " + get_user_name(handler_input)
-        return handler_input.response_builder.speak(speak_message).ask(reprompt_message).response
-
-
-class RequestInfoHandler(AbstractRequestHandler):
-    def can_handle(self, handler_input):
-        print("handler input is: ")
-
-        print(handler_input)
-
-        return is_request_type("IntentRequest")(handler_input) and is_intent_name("RequestInfoIntent")(handler_input)
-
-    def handle(self, handler_input):
-
-        output_string = "Email: " + get_user_email(handler_input) + " Full Name: " + get_user_full_name(handler_input)
-        return handler_input.response_builder.speak("Here is your info, " + output_speech).set_card(
-            SimpleCard("Hello" + get_user_name(handler_input), output_string)
-        ).response
-
-        
 
 class CancelOrStopIntentHandler(AbstractRequestHandler):
     """Single handler for Cancel and Stop Intent."""
+
     def can_handle(self, handler_input):
         # type: (HandlerInput) -> bool
         return (is_intent_name("AMAZON.CancelIntent")(handler_input) or
                 is_intent_name("AMAZON.StopIntent")(handler_input))
 
     def handle(self, handler_input):
+        print("Can CancelOrStopIntentHandler-------------------------------------------------------")
         # type: (HandlerInput) -> Response
         speech_text = "Goodbye!"
 
         handler_input.response_builder.speak(speech_text).set_card(
-            SimpleCard("Hello World", speech_text))
+            SimpleCard("My Car", speech_text))
         return handler_input.response_builder.response
 
 
@@ -80,14 +44,16 @@ class FallbackIntentHandler(AbstractRequestHandler):
     This handler will not be triggered except in supported locales,
     so it is safe to deploy on any locale.
     """
+
     def can_handle(self, handler_input):
         # type: (HandlerInput) -> bool
         return is_intent_name("AMAZON.FallbackIntent")(handler_input)
 
     def handle(self, handler_input):
+        print("Can FallbackIntentHandler-------------------------------------------------------")
         # type: (HandlerInput) -> Response
         speech_text = (
-            "The Hello World skill can't help you with that.  "
+            "The my car skill can't help you with that.  "
             "You can say hello!!")
         reprompt = "You can say hello!!"
         handler_input.response_builder.speak(speech_text).ask(reprompt)
@@ -96,11 +62,13 @@ class FallbackIntentHandler(AbstractRequestHandler):
 
 class SessionEndedRequestHandler(AbstractRequestHandler):
     """Handler for Session End."""
+
     def can_handle(self, handler_input):
         # type: (HandlerInput) -> bool
         return is_request_type("SessionEndedRequest")(handler_input)
 
     def handle(self, handler_input):
+        print("Can SessionEndedRequestHandler-------------------------------------------------------")
         # type: (HandlerInput) -> Response
         return handler_input.response_builder.response
 
@@ -109,11 +77,13 @@ class CatchAllExceptionHandler(AbstractExceptionHandler):
     """Catch all exception handler, log exception and
     respond with custom message.
     """
+
     def can_handle(self, handler_input, exception):
         # type: (HandlerInput, Exception) -> bool
         return True
 
     def handle(self, handler_input, exception):
+        print("Can CatchAllExceptionHandler-------------------------------------------------------")
         # type: (HandlerInput, Exception) -> Response
         logger.error(exception, exc_info=True)
 
@@ -123,33 +93,218 @@ class CatchAllExceptionHandler(AbstractExceptionHandler):
         return handler_input.response_builder.response
 
 
-def get_user_email(handler_input):
-    user_infos = cognito_client.get_user(AccessToken=get_account_linking_access_token(handler_input))['UserAttributes']
+class RequestInfoHandler(AbstractRequestHandler):
+    def can_handle(self, handler_input):
+        logger.info("handler input request_envelope and context is: ")
+        logger.info(handler_input.request_envelope)
+        logger.info(handler_input.context)
+        return is_request_type("IntentRequest")(handler_input) and is_intent_name("RequestInfoIntent")(handler_input)
 
-    user_info_dic = {}
-    for user_info in user_infos:
-        user_info_dic[user_info['Name']] = user_info['Value']
-    return user_info_dic['email']
-
-def get_user_full_name(handler_input):
-    user_infos = cognito_client.get_user(AccessToken=get_account_linking_access_token(handler_input))['UserAttributes']
-
-    user_info_dic = {}
-    for user_info in user_infos:
-        user_info_dic[user_info['Name']] = user_info['Value']
-    return user_info_dic['name']
-
-def get_user_name(handler_input):
-    return cognito_client.get_user(AccessToken=get_account_linking_access_token(handler_input))['Username']
+    def handle(self, handler_input):
+        print(
+            "Can RequestInfoHandler-------------------------------------------------------")
+        output_string = "You current vehicle status: " + \
+            get_status(handler_input)
+        return handler_input.response_builder.speak("Here is what you are looking for, " + output_string).set_card(
+            SimpleCard("Car Status Check", output_string)
+        ).response
 
 
-sb.add_request_handler(CheckAccountLinkedHandler())
+class CarCtrlAirCondPwrHandler(AbstractRequestHandler):
+    def can_handle(self, handler_input):
+        logger.info("handler input request_envelope and context is: ")
+        logger.info(handler_input.request_envelope)
+        logger.info(handler_input.context)
+        return is_request_type("IntentRequest")(handler_input) and is_intent_name("CarCtrlAirCondPwrIntent")(handler_input)
+
+    def handle(self, handler_input):
+        print("Can CarCtrlAirCondPwrHandler-------------------------------------------------------")
+        output_string = "Sending remote vehicle control commands: " + \
+            set_status(handler_input)
+        return handler_input.response_builder.speak("Here is what you are looking for, " + output_string).set_card(
+            SimpleCard("Remote vehicle Control", output_string)
+        ).response
+
+
+class CarCtrlAirCondTempHandler(AbstractRequestHandler):
+    def can_handle(self, handler_input):
+        logger.info("handler input request_envelope and context is: ")
+        logger.info(handler_input.request_envelope)
+        logger.info(handler_input.context)
+        return is_request_type("IntentRequest")(handler_input) and is_intent_name("CarCtrlAirCondTempIntent")(handler_input)
+
+    def handle(self, handler_input):
+        print("Can CarCtrlAirCondTempHandler-------------------------------------------------------")
+        output_string = "Sending remote vehicle control commands: " + \
+            set_status(handler_input)
+        return handler_input.response_builder.speak("Here is what you are looking for, " + output_string).set_card(
+            SimpleCard("Remote vehicle Control", output_string)
+        ).response
+
+class CarCtrlAirCondFanHandler(AbstractRequestHandler):
+    def can_handle(self, handler_input):
+        print("handler input request_envelope and context is: ")
+        return is_request_type("IntentRequest")(handler_input) and is_intent_name("CarCtrlAirCondFanIntent")(handler_input)
+
+    def handle(self, handler_input):
+        print("Can CarCtrlAirCondTempHandler-------------------------------------------------------")
+        output_string = "Sending remote vehicle control commands: " + \
+            set_status(handler_input)
+        return handler_input.response_builder.speak("Here is what you are looking for, " + output_string).set_card(
+            SimpleCard("Remote vehicle Control", output_string)
+        ).response
+
+
+# Util functions
+
+def get_status(handler_input):
+    intent = ask_utils.get_intent_name(handler_input)
+    key = "test-vin"
+    resolved_id = get_resolved_id(
+        handler_input.request_envelope.request, "infoTypeRequested")
+
+    data = read_dynamodb(key)
+    output_string = "with "
+
+    if resolved_id == "MLG":
+        output_string = "with " + data["Item"]["MLG"]["S"] + \
+        " " + data["Item"]["MLG_unit"]["S"] + " mileage left"
+
+    if resolved_id == "BAT":
+        output_string = "battery with " + \
+        data["Item"]["BAT"]["S"] + " " + \
+        data["Item"]["BAT_unit"]["S"] + " left"
+
+    return output_string
+
+
+def set_status(handler_input):
+    intent = ask_utils.get_intent_name(handler_input)
+    output_string = " Set status: "
+
+    if intent == "CarCtrlAirCondPwrIntent":
+        resolved_id = get_resolved_id(
+            handler_input.request_envelope.request, "SetConditionRequested")
+        print("------Set Status------ with INTENT = " +
+              intent + "------ with Resolve ID = " + resolved_id)
+        output_string = set_ac_pwr(resolved_id)
+
+    if intent == "CarCtrlAirCondTempIntent":
+        slot_values = ask_utils.get_slot_value_v2(handler_input, "AC_TEMP_SET")
+        print(format(slot_values))
+        print("------Set Status------ with INTENT = " + intent +
+              "------ with Slots AC_TEMP_SET = " + slot_values.value)
+        output_string = set_ac_status("AC_TEMP_SET", slot_values.value)
+
+    if intent == "CarCtrlAirCondFanIntent":
+        slot_values = ask_utils.get_slot_value_v2(handler_input, "AC_FAN_SET")
+        print(format(slot_values))
+        print("------Set Status------ with INTENT = " + intent +
+              "------ with Slots AC_FAN_SET = " + slot_values.value)
+        output_string = set_ac_status("AC_FAN_SET", slot_values.value)
+
+    return output_string
+
+def get_ac_status(key):
+    data = read_dynamodb(key)
+    ac_status = "OFF"
+    if data["Item"]["AC_PWR_GET"]["S"] == "1":
+        ac_status = "ON"
+
+    output_string = "air condition is " + data["Item"]["AC_PWR_GET"]["S"] + " with temperature of" + \
+        data["Item"]["AC_TEMP_GET"]["S"] + \
+        " and FAN speed level of " + data["Item"]["AC_FAN_GET"]["S"]
+    return output_string
+
+def set_ac_pwr(key):
+    output_string = "Air conditioner ERROR"
+    if (key == "AC_PWR_ON"):
+        set_dynamodb("AC_PWR_SET", "ON")
+        output_string = "Air conditioner ON"
+    if (key == "AC_PWR_OFF"):
+        set_dynamodb("AC_PWR_SET", "OFF")
+        output_string = "Air conditioner OFF"
+    return output_string
+
+def set_ac_status(key, value):
+    output_string = "Air conditioner ERROR"
+    if (key == "AC_TEMP_SET"):
+        set_dynamodb(key, value)
+        output_string = "Set Air conditioner Temperature to " + value + " degrees"
+    if (key == "AC_FAN_SET"):
+        set_dynamodb(key, value)
+        output_string = "Set Air conditioner Fan Speed to Level " + value
+    return output_string
+
+
+# sb.add_request_handler(CheckAccountLinkedHandler())
 sb.add_request_handler(SayHelloHandler())
 sb.add_request_handler(RequestInfoHandler())
+sb.add_request_handler(CarCtrlAirCondPwrHandler())
+sb.add_request_handler(CarCtrlAirCondTempHandler())
+sb.add_request_handler(CarCtrlAirCondFanHandler())
+# default_request_handler
 sb.add_request_handler(CancelOrStopIntentHandler())
 sb.add_request_handler(FallbackIntentHandler())
 sb.add_request_handler(SessionEndedRequestHandler())
-
 sb.add_exception_handler(CatchAllExceptionHandler())
 
 handler = sb.lambda_handler()
+
+
+# Utility functions
+def get_resolved_id(request, slot_name):
+    """Resolve the slot name from the request using resolutions."""
+    # type: (IntentRequest, str) -> Union[str, None]
+    # slots_res_id = handler_input.request_envelope.request.intent.slots.infoTypeRequested.resolutions.resolutions_per_authority[0].values[0].value.id
+    try:
+        return (request.intent.slots[slot_name].resolutions.
+                resolutions_per_authority[0].values[0].value.id)
+    except (AttributeError, ValueError, KeyError, IndexError, TypeError) as e:
+        logger.info("Couldn't resolve {} for request: {}".format(
+            slot_name, request))
+        logger.info(str(e))
+        return None
+
+
+def read_dynamodb(key):
+    try:
+        data = client.get_item(
+            TableName='byd_demo_tsp_db',
+            Key={
+                'vin': {
+                    'S': key
+                }
+            })
+    except:
+        logger.error("Can not read dynamo table")
+        raise
+    else:
+        return data
+
+
+def set_dynamodb(key, value):
+    try:
+        client.update_item(
+            TableName='byd_demo_tsp_db',
+            Key={
+                'vin': {
+                    'S': '1G1AF1F57A7192174'
+                }
+            },
+            AttributeUpdates={
+                key: {
+                    'Value': {
+                        'S': value
+                    }
+                },
+                'TS':{
+                    'Value': {
+                        'S': str(int(round(time.time() * 1000)))
+                    }
+                }
+            }
+        )
+    except:
+        logger.error("Can not set dynamodb table")
+        raise
