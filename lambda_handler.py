@@ -209,12 +209,12 @@ def set_status(handler_input):
 def get_ac_status(key):
     data = read_dynamodb(key)
     ac_status = "OFF"
-    if data["Item"]["AC_PWR_GET"]["S"] == "1":
+    if data["Item"]["AC_PWR_SET"]["S"] == "1":
         ac_status = "ON"
 
-    output_string = "air condition is " + data["Item"]["AC_PWR_GET"]["S"] + " with temperature of" + \
-        data["Item"]["AC_TEMP_GET"]["S"] + \
-        " and FAN speed level of " + data["Item"]["AC_FAN_GET"]["S"]
+    output_string = "air condition is " + data["Item"]["AC_PWR_SET"]["S"] + " with temperature of" + \
+        data["Item"]["AC_TEMP_SET"]["S"] + \
+        " and FAN speed level of " + data["Item"]["AC_FAN_SET"]["S"]
     return output_string
 
 def set_ac_pwr(key):
