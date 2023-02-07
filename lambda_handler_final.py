@@ -13,6 +13,7 @@ import ask_sdk_core.utils as ask_utils
 import logging
 import json
 import time
+import requests
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -24,6 +25,7 @@ client = boto3.client('dynamodb')
 
 class CheckAccountLinkedHandler(AbstractRequestHandler):
     def can_handle(self, handler_input):
+        print("check account is done")
         return not get_account_linking_access_token(handler_input)
 
 
@@ -31,7 +33,7 @@ class CheckAccountLinkedHandler(AbstractRequestHandler):
         print("Can CheckAccountLinkedHandler-------------------------------------------------------")
         return handler_input.response_builder.speak("Need to link account in Alexa App").response
 
-        
+
 class CancelOrStopIntentHandler(AbstractRequestHandler):
     """Single handler for Cancel and Stop Intent."""
 
@@ -168,10 +170,23 @@ class CarCtrlAirCondFanHandler(AbstractRequestHandler):
 
 # Util functions
 
-VIN_KEY = 'test-vin'
+def get_vin_key(handler_input):
+    access_token = get_account_linking_access_token(handler_input)
+    content = requests.get('https://api.amazon.com/user/profile?access_token='+access_token).content
+    user_email_address = json.loads(content)['email']
+    data = client.get_item(
+        TableName='alexa-workshop-user-vin',
+        Key={
+            'email_address': {
+                'S': user_email_address
+            }
+        })
+    return data["Item"]["vin"]["S"]
+
+
 def get_status(handler_input):
     intent = ask_utils.get_intent_name(handler_input)
-    key = VIN_KEY
+    key = get_vin_key(handler_input)
     resolved_id = get_resolved_id(
         handler_input.request_envelope.request, "infoTypeRequested")
 
@@ -193,27 +208,27 @@ def get_status(handler_input):
 def set_status(handler_input):
     intent = ask_utils.get_intent_name(handler_input)
     output_string = " Set status: "
-
+    vin_key = get_vin_key(handler_input)
     if intent == "CarCtrlAirCondPwrIntent":
         resolved_id = get_resolved_id(
             handler_input.request_envelope.request, "SetConditionRequested")
         print("------Set Status------ with INTENT = " +
               intent + "------ with Resolve ID = " + resolved_id)
-        output_string = set_ac_pwr(resolved_id)
+        output_string = set_ac_pwr(resolved_id, vin_key)
 
     if intent == "CarCtrlAirCondTempIntent":
         slot_values = ask_utils.get_slot_value_v2(handler_input, "AC_TEMP_SET")
         print(format(slot_values))
         print("------Set Status------ with INTENT = " + intent +
               "------ with Slots AC_TEMP_SET = " + slot_values.value)
-        output_string = set_ac_status("AC_TEMP_SET", slot_values.value)
+        output_string = set_ac_status("AC_TEMP_SET", slot_values.value, vin_key)
 
     if intent == "CarCtrlAirCondFanIntent":
         slot_values = ask_utils.get_slot_value_v2(handler_input, "AC_FAN_SET")
         print(format(slot_values))
         print("------Set Status------ with INTENT = " + intent +
               "------ with Slots AC_FAN_SET = " + slot_values.value)
-        output_string = set_ac_status("AC_FAN_SET", slot_values.value)
+        output_string = set_ac_status("AC_FAN_SET", slot_values.value, vin_key)
 
     return output_string
 
@@ -228,23 +243,23 @@ def get_ac_status(key):
         " and FAN speed level of " + data["Item"]["AC_FAN_SET"]["S"]
     return output_string
 
-def set_ac_pwr(key):
+def set_ac_pwr(key, vin_key):
     output_string = "Air conditioner ERROR"
     if (key == "AC_PWR_ON"):
-        set_dynamodb("AC_PWR_SET", "ON")
+        set_dynamodb("AC_PWR_SET", "ON", vin_key)
         output_string = "Air conditioner ON"
     if (key == "AC_PWR_OFF"):
-        set_dynamodb("AC_PWR_SET", "OFF")
+        set_dynamodb("AC_PWR_SET", "OFF", vin_key)
         output_string = "Air conditioner OFF"
     return output_string
 
-def set_ac_status(key, value):
+def set_ac_status(key, value, set_ac_status, vin_key):
     output_string = "Air conditioner ERROR"
     if (key == "AC_TEMP_SET"):
-        set_dynamodb(key, value)
+        set_dynamodb(key, value, vin_key)
         output_string = "Set Air conditioner Temperature to " + value + " degrees"
     if (key == "AC_FAN_SET"):
-        set_dynamodb(key, value)
+        set_dynamodb(key, value, vin_key)
         output_string = "Set Air conditioner Fan Speed to Level " + value
     return output_string
 
@@ -294,13 +309,13 @@ def read_dynamodb(key):
         return data
 
 
-def set_dynamodb(key, value):
+def set_dynamodb(key, value, vin_key):
     try:
         client.update_item(
             TableName='alexa_workshop_tsp',
             Key={
                 'vin': {
-                    'S': VIN_KEY
+                    'S': vin_key
                 }
             },
             AttributeUpdates={
