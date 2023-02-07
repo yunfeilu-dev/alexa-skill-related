@@ -1,7 +1,7 @@
 {
     "interactionModel": {
         "languageModel": {
-            "invocationName": "link demo",
+            "invocationName": "my car",
             "intents": [
                 {
                     "name": "AMAZON.CancelIntent",
@@ -16,28 +16,6 @@
                     "samples": []
                 },
                 {
-                    "name": "AMAZON.NavigateHomeIntent",
-                    "samples": []
-                },
-                {
-                    "name": "SayHelloIntent",
-                    "slots": [],
-                    "samples": [
-                        "hello",
-                        "hey",
-                        "good day",
-                        "howdy",
-                        "greetings",
-                        "namaste",
-                        "aloha",
-                        "hola",
-                        "bonjour",
-                        "hiya",
-                        "gday",
-                        "hi"
-                    ]
-                },
-                {
                     "name": "RequestInfoIntent",
                     "slots": [
                         {
@@ -46,18 +24,88 @@
                         }
                     ],
                     "samples": [
-                        "tell me my {infoTypeRequested}",
-                        "what is my {infoTypeRequested}",
-                        "give me my {infoTypeRequested}",
+                        "how much {infoTypeRequested} left",
+                        "for my car's {infoTypeRequested}",
+                        "tell me my car's {infoTypeRequested}",
+                        "what is the {infoTypeRequested} left for my car",
+                        "give me {infoTypeRequested} of my car",
                         "{infoTypeRequested}",
-                        "what is {infoTypeRequested}",
                         "what's {infoTypeRequested}",
-                        "what's my {infoTypeRequested}",
-                        "get me {infoTypeRequested}",
-                        "give me {infoTypeRequested}",
+                        "what's car {infoTypeRequested}",
+                        "get me {infoTypeRequested} of my car",
+                        "for my {infoTypeRequested}",
                         "provide {infoTypeRequested}",
                         "what are {infoTypeRequested}",
                         "tell me {infoTypeRequested}"
+                    ]
+                },
+                {
+                    "name": "AMAZON.NavigateHomeIntent",
+                    "samples": []
+                },
+                {
+                    "name": "AMAZON.FallbackIntent",
+                    "samples": []
+                },
+                {
+                    "name": "AMAZON.PauseIntent",
+                    "samples": []
+                },
+                {
+                    "name": "AMAZON.ResumeIntent",
+                    "samples": []
+                },
+                {
+                    "name": "CarCtrlAirCondPwrIntent",
+                    "slots": [
+                        {
+                            "name": "SetConditionRequested",
+                            "type": "DeviceState",
+                            "multipleValues": {
+                                "enabled": false
+                            }
+                        }
+                    ],
+                    "samples": [
+                        "turn {SetConditionRequested} the A. C.",
+                        "turn {SetConditionRequested} the air conditioner",
+                        "{SetConditionRequested} air conditioner",
+                        "set A. C. {SetConditionRequested}",
+                        "{SetConditionRequested} A. C.",
+                        "set {SetConditionRequested} air conditioner",
+                        "turn {SetConditionRequested} air conditioner"
+                    ]
+                },
+                {
+                    "name": "CarCtrlAirCondTempIntent",
+                    "slots": [
+                        {
+                            "name": "AC_TEMP_SET",
+                            "type": "AMAZON.NUMBER"
+                        }
+                    ],
+                    "samples": [
+                        "turn temperature to {AC_TEMP_SET} degree",
+                        "set temperature to {AC_TEMP_SET} degree"
+                    ]
+                },
+                {
+                    "name": "CarCtrlAirCondFanIntent",
+                    "slots": [
+                        {
+                            "name": "AC_FAN_SET",
+                            "type": "AMAZON.NUMBER"
+                        }
+                    ],
+                    "samples": [
+                        "turn air conditioner fan to {AC_FAN_SET}",
+                        "set air conditioner fan to {AC_FAN_SET}",
+                        "turn air conditioner fan speed to {AC_FAN_SET}",
+                        "set air conditioner fan speed to {AC_FAN_SET}",
+                        "set fan speed to {AC_FAN_SET}",
+                        "turn AC fan speed to {AC_FAN_SET}",
+                        "set AC fan speed to {AC_FAN_SET}",
+                        "turn fan speed to {AC_FAN_SET}"
                     ]
                 }
             ],
@@ -66,70 +114,118 @@
                     "name": "infoType",
                     "values": [
                         {
-                            "id": "fullName",
+                            "id": "AC_TEMP_GET",
                             "name": {
-                                "value": "name",
+                                "value": "ac_temp_status"
+                            }
+                        },
+                        {
+                            "id": "AC_FAN_GET",
+                            "name": {
+                                "value": "ac_fan_status"
+                            }
+                        },
+                        {
+                            "id": "AC_PWR_GET",
+                            "name": {
+                                "value": "ac_power_status"
+                            }
+                        },
+                        {
+                            "id": "BAT",
+                            "name": {
+                                "value": "battery_status",
                                 "synonyms": [
-                                    "full name",
-                                    "user name",
-                                    "complete name",
-                                    "who am i"
+                                    "charging",
+                                    "charging status",
+                                    "battery status",
+                                    "battery left",
+                                    "battery"
                                 ]
                             }
                         },
                         {
-                            "id": "streetAddress",
+                            "id": "MLG",
                             "name": {
-                                "value": "street address",
+                                "value": "mileage",
                                 "synonyms": [
-                                    "mailing address",
-                                    "where I hang my hat",
-                                    "where I live",
-                                    "home address"
+                                    "k. m. left",
+                                    "miles",
+                                    "how many miles left",
+                                    "how much miles",
+                                    "how many kilometers left",
+                                    "how much kilometers left",
+                                    "current mileage",
+                                    "range",
+                                    "how far can I go",
+                                    "car mileage",
+                                    "car range"
                                 ]
                             }
                         },
                         {
-                            "id": "phoneNumber",
+                            "id": "DRS",
                             "name": {
-                                "value": "phone number",
+                                "value": "doorStatus",
                                 "synonyms": [
-                                    "mobile number",
-                                    "contact number",
-                                    "home number",
-                                    "telephone number",
-                                    "text address"
+                                    "door",
+                                    "door is open",
+                                    "door is close",
+                                    "door open",
+                                    "door close",
+                                    "is the door open",
+                                    "is the door close"
                                 ]
                             }
                         },
                         {
-                            "id": "emailAddress",
+                            "id": "AIF",
                             "name": {
-                                "value": "email address",
+                                "value": "allInfo",
                                 "synonyms": [
-                                    "email account",
-                                    "a. o. l. account",
-                                    "g. mail",
-                                    "electronic message",
-                                    "electronic mail address",
-                                    "online address"
-                                ]
-                            }
-                        },
-                        {
-                            "id": "fullProfile",
-                            "name": {
-                                "value": "full profile",
-                                "synonyms": [
-                                    "everything about me",
-                                    "all you know about me",
-                                    "all my details",
-                                    "my data",
+                                    "status",
+                                    "everything about car",
+                                    "all you know about car",
+                                    "all car's details",
+                                    "my car data",
                                     "full set of details",
-                                    "all my info",
-                                    "my entire profile",
-                                    "all my information",
+                                    "all info",
+                                    "car entire profile",
+                                    "all information",
                                     "all of it"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "DeviceState",
+                    "values": [
+                        {
+                            "id": "AC_PWR_OFF",
+                            "name": {
+                                "value": "ac_power_status_off",
+                                "synonyms": [
+                                    "turn off",
+                                    "shut off",
+                                    "shut down",
+                                    "off",
+                                    "close",
+                                    "stop"
+                                ]
+                            }
+                        },
+                        {
+                            "id": "AC_PWR_ON",
+                            "name": {
+                                "value": "ac_power_status_on",
+                                "synonyms": [
+                                    "turn on",
+                                    "turn down",
+                                    "bring back",
+                                    "start",
+                                    "open",
+                                    "on"
                                 ]
                             }
                         }
