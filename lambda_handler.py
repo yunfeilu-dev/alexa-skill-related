@@ -157,9 +157,10 @@ class CarCtrlAirCondFanHandler(AbstractRequestHandler):
 
 # Util functions
 
+VIN_KEY = 'test-vin'
 def get_status(handler_input):
     intent = ask_utils.get_intent_name(handler_input)
-    key = "test-vin"
+    key = VIN_KEY
     resolved_id = get_resolved_id(
         handler_input.request_envelope.request, "infoTypeRequested")
 
@@ -265,12 +266,12 @@ def get_resolved_id(request, slot_name):
             slot_name, request))
         logger.info(str(e))
         return None
-
+TABLE_NAME = ''
 
 def read_dynamodb(key):
     try:
         data = client.get_item(
-            TableName='byd_demo_tsp_db',
+            TableName='alexa_workshop_tsp',
             Key={
                 'vin': {
                     'S': key
@@ -286,10 +287,10 @@ def read_dynamodb(key):
 def set_dynamodb(key, value):
     try:
         client.update_item(
-            TableName='byd_demo_tsp_db',
+            TableName='alexa_workshop_tsp',
             Key={
                 'vin': {
-                    'S': '1G1AF1F57A7192174'
+                    'S': VIN_KEY
                 }
             },
             AttributeUpdates={
