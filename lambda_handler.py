@@ -249,7 +249,7 @@ sb.add_request_handler(FallbackIntentHandler())
 sb.add_request_handler(SessionEndedRequestHandler())
 sb.add_exception_handler(CatchAllExceptionHandler())
 
-handler = sb.lambda_handler()
+lambda_handler = sb.lambda_handler()
 
 
 # Utility functions
