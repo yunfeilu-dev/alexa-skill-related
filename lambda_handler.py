@@ -239,7 +239,6 @@ def set_ac_status(key, value):
 
 
 # sb.add_request_handler(CheckAccountLinkedHandler())
-sb.add_request_handler(SayHelloHandler())
 sb.add_request_handler(RequestInfoHandler())
 sb.add_request_handler(CarCtrlAirCondPwrHandler())
 sb.add_request_handler(CarCtrlAirCondTempHandler())
